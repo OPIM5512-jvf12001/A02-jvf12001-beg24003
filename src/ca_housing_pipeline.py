@@ -90,3 +90,19 @@ if not os.path.exists('figures'):
 plt.savefig('figures/training_scatterplot.png', dpi=300, bbox_inches='tight')
 
 plt.show()
+
+# Making predictions for our training data
+test_predict = mlp.predict(X_test)
+
+
+plt.figure(figsize=(8, 6))
+plt.scatter(x=y_test, y=test_predict)
+plt.plot([0, 5], [0, 5], '--k') # 45 degree line
+plt.axis('tight')
+plt.xlabel('True price ($100,000s)')
+plt.ylabel('Predicted price ($100,000s)')
+plt.suptitle('Test Results')
+
+# Saving the figure before we display it.
+plt.savefig('figures/test_scatterplot.png', dpi=300, bbox_inches='tight')
+plt.show()
