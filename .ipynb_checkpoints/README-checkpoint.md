@@ -2,5 +2,3 @@
 Joe Fontanarosa and Moses Akinola's OPIM5512 Ping Pong Assignment
 
 - More info to be added as project progresses
-
-I am happy to be working with you on this project, Joseph
