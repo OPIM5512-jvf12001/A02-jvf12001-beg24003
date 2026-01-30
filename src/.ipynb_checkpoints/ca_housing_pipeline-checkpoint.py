@@ -39,12 +39,3 @@ X_train, X_test, y_train, y_test = train_test_split(X, Y,
                                                     test_size = 0.2,
                                                     shuffle = True,
                                                     random_state = 35)
-
-mlp = MLPRegressor(random_state=42,
-                   hidden_layer_sizes=(10,5),
-                   max_iter=200,
-                   batch_size=1000,
-                   activation="relu",
-                   validation_fraction=0.2,
-                   early_stopping=True) # important!
-mlp.fit(X_train, y_train)
