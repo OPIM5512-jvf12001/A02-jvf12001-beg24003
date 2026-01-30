@@ -3,6 +3,7 @@ from sklearn.datasets import fetch_california_housing
 import pandas as pd
 import matplotlib.pyplot as plt
 import os
+import seaborn as sns
 
 # Import sklearn functions required for splitting, normalization, 
 # modeling, and calculating error metrics
@@ -54,12 +55,21 @@ print(check_scaling.describe())
 # Model uses a few input parameters that are not default. We are using a two layer network, a larger batch size, 
 # and early_stopping will be used to prevent the model from overrunning our target.
 # Originally we were using (10, 5) nodes, this was producing a very "blobby" scatterplot so I upped this to adjust.
+
 mlp = MLPRegressor(random_state=42,
-                   hidden_layer_sizes=(100,50),
-                   max_iter=500, # Started with max_iter=200, increasing this to try to achieve convergence
-                   batch_size=1000,
+                   # I tried adding a 3rd layer of 25 nodes and the error metrics actually got worse.
+                   # shrinking layer 2 to 25 nodes seems to be the sweet spot.
+                   hidden_layer_sizes=(100, 25),
+                   max_iter=1000, # Started with max_iter=200, increasing this to try to achieve convergence
+                   batch_size=500,
+                   # I tried using tanh instead and it took much longer to converge and produced worse results.
                    activation="relu",
                    validation_fraction=0.2,
+                   # Tightening the tolerance improved metrics a little, further changes do not help.
+                   tol=1e-5,
+                   # Increasing the alpha showed some improved in the error metrics, futher increases make things worse.
+                   alpha = 0.001,
+                   # I also tried a different solver but the default adam performed better.
                    early_stopping=True) # important!
 mlp.fit(X_train, y_train)
 
@@ -74,15 +84,18 @@ else:
 train_predict = mlp.predict(X_train)
 
 
-# Basic scatterplot to display the data, axis scales are between 0 and 5 since median house value is in units of $100,000
+# Basic scatterplot to display the data, axis scales are between 0 and 6 since median house value is in units of $100,000.
 # Note that there is a vertical line right at 5. Researching the data a bit shows that the census capped house prices at $500,000 which creates this odd result.
-plt.figure(figsize=(8,6))
-plt.scatter(x=y_train, y=train_predict)
-plt.plot([0,5],[0,5], '--k')
+# Axes are expanded to (0,6) since the model could still predict a value greater than 5 even if the actual values will never be that large.
+sns.set_theme(style='ticks')
+plt.figure(figsize=(8,7))
+#Using Seaborn instead of matplotlib to get a little more creative with our plots.
+train_plot = sns.scatterplot(x=y_train, y=train_predict, color = "#004d4d", s = 20, alpha = 0.4, edgecolor = 'w')
+plt.plot([0,6],[0,6], color = 'darkorange', linewidth = 2)
 plt.axis('tight')
-plt.xlabel('True price in $100,000s')
-plt.ylabel('Predicted Price in $100,000s')
-plt.suptitle('Training Results')
+plt.xlabel('True price in $100,000s', fontsize = 14, fontweight = 'bold')
+plt.ylabel('Predicted Price in $100,000s', fontsize = 14, fontweight = 'bold')
+plt.title('Training Results', pad = 30, fontsize = 18, fontweight = 'bold')
 
 # Saving the figure before we display it.
 if not os.path.exists('figures'):
@@ -91,18 +104,36 @@ plt.savefig('figures/training_scatterplot.png', dpi=300, bbox_inches='tight')
 
 plt.show()
 
-# Making predictions for our training data
+# Making predictions for our test data
 test_predict = mlp.predict(X_test)
 
 
-plt.figure(figsize=(8, 6))
-plt.scatter(x=y_test, y=test_predict)
-plt.plot([0, 5], [0, 5], '--k') # 45 degree line
+plt.figure(figsize=(8,7))
+#Using Seaborn instead of matplotlib to get a little more creative with our plots.
+test_plot = sns.scatterplot(x=y_test, y=test_predict, color = "#004d4d", s = 20, alpha = 0.4, edgecolor = 'w')
+plt.plot([0,6],[0,6], color = 'darkorange', linewidth = 2)
 plt.axis('tight')
-plt.xlabel('True price ($100,000s)')
-plt.ylabel('Predicted price ($100,000s)')
-plt.suptitle('Test Results')
+plt.xlabel('True price in $100,000s', fontsize = 14, fontweight = 'bold')
+plt.ylabel('Predicted Price in $100,000s', fontsize = 14, fontweight = 'bold')
+plt.title('Test Results', pad = 30, fontsize = 18, fontweight = 'bold')
 
 # Saving the figure before we display it.
 plt.savefig('figures/test_scatterplot.png', dpi=300, bbox_inches='tight')
 plt.show()
+
+
+
+# Displaying our three important error metrics. The initial run of the model produces decent results and the metrics do not shift much between
+# training and test data. This tells us that the model is not overfitting and it generalizing well.
+print("\n" + "-" * 30)
+print("Training R2 Score: ", r2_score(y_train, train_predict))
+print("Test Data R2 Score: ", r2_score(y_test, test_predict))
+print("\n" + "-" * 30)
+print("Training MAE: ", mean_absolute_error(y_train, train_predict))
+print("Test Data MAE: ", mean_absolute_error(y_test, test_predict))
+print("\n" + "-" * 30)
+print("Training MSE: ", mean_squared_error(y_train, train_predict))
+print("Test Data MSE: ", mean_squared_error(y_test, test_predict))
+print("\n" + "-" * 30)
+
+
